@@ -43,8 +43,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user
 
 
-
-
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     password = serializers.CharField(max_length=128, write_only=True)
@@ -61,3 +59,7 @@ class UserLoginSerializer(serializers.Serializer):
 
         return data
 
+
+class UserEmailConfirmationSerializer(serializers.Serializer):
+    success = serializers.BooleanField()
+    message = serializers.CharField()

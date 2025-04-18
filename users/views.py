@@ -9,7 +9,7 @@ from rest_framework.authtoken.models import Token
 
 from FirstDjangoProject import settings
 from .models import User
-from .serializers import UserRegistrationSerializer, UserLoginSerializer
+from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserEmailConfirmationSerializer
 
 class UserRegistrationAPIView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
@@ -64,16 +64,18 @@ class UserLoginAPIView(generics.GenericAPIView):
 
 
 class UserEmailConfirmationAPIView(generics.GenericAPIView):
+    serializer_class = UserEmailConfirmationSerializer
+
     def get(self, request, uidb64, token, *args, **kwargs):
         try:
             uid = urlsafe_base64_decode(uidb64).decode()
             user = User.objects.get(pk=uid)
         except (User.DoesNotExist, ValueError, TypeError, OverflowError):
-            return Response({"error": "Invalid activation link"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"success": False, "message": "Invalid activation link"}, status=status.HTTP_400_BAD_REQUEST)
 
         if default_token_generator.check_token(user, token):
             user.is_active = True
             user.save()
-            return Response({"message": "Email successfully verified!"}, status=status.HTTP_200_OK)
+            return Response({"success": True, "message": "Email successfully confirmed"}, status=status.HTTP_200_OK)
         else:
-            return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"success": False, "message": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)

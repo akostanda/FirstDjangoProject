@@ -70,7 +70,6 @@ class EventAddParticipantAPIView(generics.UpdateAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
     permission_classes = [permissions.IsAuthenticated]
-    lookup_url_kwarg = 'event_id'
 
     def update(self, request, *args, **kwargs):
         event = self.get_object()
