@@ -1,12 +1,7 @@
-from django.core.mail import send_mail
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
-from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.hashers import make_password, check_password
 import re
 from rest_framework import serializers
 
-from FirstDjangoProject import settings
 from .models import User
 
 
@@ -45,22 +40,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             is_active=False
         )
 
-        self.send_confirmation_email(user)
-
         return user
 
-    def send_confirmation_email(self, user):
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        token = default_token_generator.make_token(user)
 
-        verify_url = f"{settings.BASE_URL}/{settings.EMAIL_CONFIRMATION_URL}/{uid}/{token}/"
-
-        send_mail(
-            subject="Confirmation Email",
-            message=f"Hi {user.username}, click the link to confirm your email address: {verify_url}",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-        )
 
 
 class UserLoginSerializer(serializers.Serializer):
@@ -78,13 +60,4 @@ class UserLoginSerializer(serializers.Serializer):
         data['user'] = user
 
         return data
-
-
-# class EventSerializer(serializers.ModelSerializer):
-#     organizer = serializers.StringRelatedField(read_only=True)
-#
-#     class Meta:
-#         model = Event
-#         fields = ['id', 'title', 'date', 'description', 'location', 'organizer', 'participant']
-#         read_only_fields = ['organizer']
 

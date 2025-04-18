@@ -11,9 +11,7 @@ from .views import (
 
 urlpatterns = [
     path('create/', EventCreateAPIView.as_view(), name='event-creat'),
-    path('', EventListAPIView.as_view(), name='event-list-all'),
-    path('?participant=true', EventListAPIView.as_view(), name='event-list-participated'),
-    path('?participant=false', EventListAPIView.as_view(), name='event-list-notParticipated'),
+    path('', EventListAPIView.as_view(), name='event-list'),
     path('<int:pk>/', EventDetailAPIView.as_view(), name='event-detail'),
     path('<int:pk>/update/', EventUpdateAPIView.as_view(), name='event-update'),
     path('<int:pk>/delete/', EventDeleteAPIView.as_view(), name='event-delete'),

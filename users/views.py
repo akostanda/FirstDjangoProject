@@ -1,9 +1,13 @@
+from django.core.mail import send_mail
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
+from FirstDjangoProject import settings
 from .models import User
 from .serializers import UserRegistrationSerializer, UserLoginSerializer
 
@@ -17,6 +21,8 @@ class UserRegistrationAPIView(generics.CreateAPIView):
         user = serializer.instance
         token, _ = Token.objects.get_or_create(user=user)
 
+        self.send_confirmation_email(user)
+
         return Response({
             'message': 'You are successfully registered.',
             'user_id': user.id,
@@ -24,6 +30,19 @@ class UserRegistrationAPIView(generics.CreateAPIView):
             'email': user.email,
             'token': token.key
         }, status=status.HTTP_201_CREATED)
+
+    def send_confirmation_email(self, user):
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+
+        verify_url = f"{settings.BASE_URL}/{settings.EMAIL_CONFIRMATION_URL}/{uid}/{token}/"
+
+        send_mail(
+            subject="Confirmation Email",
+            message=f"Hi {user.username}, click the link to confirm your email address: {verify_url}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+        )
 
 
 class UserLoginAPIView(generics.GenericAPIView):
@@ -58,46 +77,3 @@ class UserEmailConfirmationAPIView(generics.GenericAPIView):
             return Response({"message": "Email successfully verified!"}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
-
-
-# class EventCreateAPIView(generics.CreateAPIView):
-#     queryset = Event.objects.all()
-#     serializer_class = EventSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-#
-#     def perform_create(self, serializer):
-#         serializer.save(organizer=self.request.user)
-#
-#
-# class EventListAPIView(generics.ListAPIView):
-#     queryset = Event.objects.all()
-#     serializer_class = EventSerializer
-#     permission_classes = [permissions.AllowAny]
-#
-#
-# class EventDetailAPIView(generics.RetrieveAPIView):
-#     queryset = Event.objects.all()
-#     serializer_class = EventSerializer
-#     permission_classes = [permissions.AllowAny]
-#
-#
-# class EventUpdateAPIView(generics.UpdateAPIView):
-#     queryset = Event.objects.all()
-#     serializer_class = EventSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-#
-#     def perform_update(self, serializer):
-#         if self.get_object().organizer != self.request.user:
-#             raise PermissionDenied("You can not make changes in this event, you are not the organizer.")
-#         serializer.save()
-#
-#
-# class EventDeleteView(generics.DestroyAPIView):
-#     queryset = Event.objects.all()
-#     serializer_class = EventSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-#
-#     def perform_destroy(self, instance):
-#         if instance.organizer != self.request.user:
-#             raise PermissionDenied("You can not delete this event, you are not the organizer.")
-#         instance.delete()

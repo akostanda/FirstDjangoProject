@@ -1,12 +1,11 @@
 from django.core.mail import send_mail
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
-from django.contrib.auth.tokens import default_token_generator
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import generics, status, permissions
 
 from .models import Event
+from .filters import EventFilter
 from FirstDjangoProject import settings
 from .serializers import EventSerializer
 
@@ -35,19 +34,8 @@ class EventListAPIView(generics.ListAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
     permission_classes = [permissions.AllowAny]
-
-    def get_queryset(self):
-        user = self.request.user
-        participant = self.request.query_params.get("participant")
-
-        # This condition is needed to filter events on the participated and not for the current user
-        if user.is_authenticated:
-            if participant == "true":
-                return Event.objects.filter(participant=user)
-            elif participant == "false":
-                return Event.objects.exclude(participant=user)
-
-        return Event.objects.all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = EventFilter
 
 
 class EventDetailAPIView(generics.RetrieveAPIView):
